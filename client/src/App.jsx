@@ -96,6 +96,43 @@ function App() {
     setFocusTaskId(null);
   };
 
+  const handleIndentChange = (taskId, direction) => {
+    const newTasks = JSON.parse(JSON.stringify(tasks));
+
+    function findAndMove(nodes, parentPath) {
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+
+        if (node.id === taskId) {
+          if (direction === 'indent' && i > 0) {
+            const nodeToMove = nodes.splice(i, 1)[0];
+            const newParent = nodes[i-1];
+            newParent.children.push(nodeToMove);
+            return true;
+          }
+          else if (direction === 'unindent' && parentPath.length > 0) {
+            const nodeToMove = nodes.splice(i, 1)[0];
+            const parent = parentPath[parentPath.length - 1];
+            const grandParentChildren = parentPath.length > 1 ? parentPath[parentPath.length - 2].children : newTasks;
+            const parentIndex = grandParentChildren.findIndex(n => n.id === parent.id);
+            grandParentChildren.splice(parentIndex + 1, 0, nodeToMove);
+            return true;
+          }
+          return false;
+        }
+        if (node.children && node.children.length > 0) {
+          if (findAndMove(node.children, [...parentPath,node])) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    findAndMove(newTasks, []);
+    setTasks(newTasks);
+  };
+
   return (
     <div className="app-container">
       <ul className="task-list">
@@ -108,6 +145,7 @@ function App() {
             onToggle={handleToggleComplete}
             onDelete={handleDeleteTask}
             onAddTask={handleAddTask}
+            onIndentChange={handleIndentChange}
           />
         ))}
       </ul>

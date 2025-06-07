@@ -2,7 +2,7 @@ import React from 'react';
 import { useRef, useEffect } from 'react';
 
 // tutorial calls this a "prop" object
-export default function TaskItem({ task, onToggle, onDelete, onAddTask, onFocusHandled, focusTaskId }) {
+export default function TaskItem({ task, onToggle, onDelete, onAddTask, onFocusHandled, focusTaskId, onIndentChange }) {
 
     const textInputRef = useRef(null);
 
@@ -19,7 +19,15 @@ export default function TaskItem({ task, onToggle, onDelete, onAddTask, onFocusH
             e.preventDefault();
             onAddTask(task.id);
         }
-    }
+        else if (e.key === 'Tab') {
+            e.preventDefault();
+            if (e.shiftKey) {
+                onIndentChange(task.id, 'unindent');
+            } else {
+                onIndentChange(task.id, 'indent');
+            }
+        }
+    };
 
     return (
         <li>
@@ -43,6 +51,7 @@ export default function TaskItem({ task, onToggle, onDelete, onAddTask, onFocusH
                             onToggle={onToggle}
                             onDelete={onDelete}
                             onAddTask={onAddTask}
+                            onIndentChange={onIndentChange}
                         />
                     ))}
                 </ul>
