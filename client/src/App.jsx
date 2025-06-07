@@ -28,11 +28,53 @@ const placeholderTasks = [
 function App() {
   const [tasks, setTasks] = useState(placeholderTasks);
 
+  const updateTaskInTree = (nodes, taskId, updateFn) => {
+    return nodes.map(node => {
+      if (node.id === taskId) {
+        return updateFn(node);
+      }
+      
+      if (node.children && node.children.length > 0) {
+        return { ...node, children: updateTaskInTree(node.children, taskId, updateFn) };
+      }
+      return node;
+    });
+  };
+
+  const handleToggleComplete = (taskId) => {
+    const newTasks = updateTaskInTree(tasks, taskId, (task) => ({
+      ...task,
+      completed: !task.completed,
+    }));
+    setTasks(newTasks);
+  };
+
+  const deleteTaskFromTree = (nodes,taskId) => {
+    const newNodes = nodes.filter(node => node.id !== taskId);
+
+    return newNodes.map(node => {
+      if (node.children && node.children.length > 0) {
+        return { ...node, children: deleteTaskFromTree(node.children, taskId) };
+      }
+      return node;
+    });
+  };
+
+  const handleDeleteTask = (taskId) => {
+    const newTasks = deleteTaskFromTree(tasks, taskId);
+    setTasks(newTasks);
+  };
+
   return (
     <div className="app-container">
       <ul className="task-list">
         {tasks.map(task => (
-          <TaskItem key={task.id} task={task} />
+          <TaskItem 
+            key={task.id}
+            task={task}
+            onToggle={handleToggleComplete}
+            onDelete={handleDeleteTask}
+          />
         ))}
       </ul>
     </div>
