@@ -65,6 +65,29 @@ function App() {
     setTasks(newTasks);
   };
 
+  const handleAddTask = (currentTaskId) => {
+    const newId = Date.now();
+    let taskAdded = false;
+
+    const addTaskInTree = (nodes) => {
+      const result = [];
+      for (const node of nodes) {
+        result.push(node);
+        if (node.id === currentTaskId) {
+          result.push({ id: newId, text: "", completed: false, children: [] });
+          taskAdded = true;
+        }
+        if (node.children && node.children.length > 0) {
+          node.children = taskAdded ? node.children : addTaskInTree(node.children);
+        }
+      }
+      return result;
+    };
+
+    const newTasks = addTaskInTree(tasks);
+    setTasks(newTasks);
+  };
+
   return (
     <div className="app-container">
       <ul className="task-list">
@@ -74,6 +97,7 @@ function App() {
             task={task}
             onToggle={handleToggleComplete}
             onDelete={handleDeleteTask}
+            onAddTask={handleAddTask}
           />
         ))}
       </ul>
