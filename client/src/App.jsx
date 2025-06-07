@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './App.css'
+import TaskItem from './TaskItem';
 
 // placeholder tasks for before i have a real backend
 const placeholderTasks = [
@@ -29,8 +30,11 @@ function App() {
 
   return (
     <div className="app-container">
-      <h1>todolist app v2</h1>
-      {/* here is where tasks will be rendered */}
+      <ul className="task-list">
+        {tasks.map(task => (
+          <TaskItem key={task.id} task={task} />
+        ))}
+      </ul>
     </div>
   );
 }
