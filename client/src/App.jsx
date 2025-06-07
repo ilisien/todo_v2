@@ -1,35 +1,38 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 
+// placeholder tasks for before i have a real backend
+const placeholderTasks = [
+  {
+    id:1,
+    text: "Finish the todo app!",
+    completed: false,
+    children: [
+      {
+        id:2, text: "subtask1", completed:true, children: []
+      },
+      {
+        id:3, text: "subtask2", completed:false, children: []
+      },
+    ]
+  },
+  {
+    id: 4,
+    text: "some other task",
+    completed: false,
+    children: [],
+  },
+];
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [tasks, setTasks] = useState(placeholderTasks);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="app-container">
+      <h1>todolist app v2</h1>
+      {/* here is where tasks will be rendered */}
+    </div>
+  );
 }
 
-export default App
+export default App;
