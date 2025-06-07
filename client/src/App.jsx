@@ -43,6 +43,14 @@ function App() {
     });
   };
 
+  const handleTextChange = (taskId, newText) => {
+    const newTasks = updateTaskInTree(tasks, taskId, (task) => ({
+      ...task,
+      text: newText,
+    }));
+    setTasks(newTasks)
+  }
+
   const handleToggleComplete = (taskId) => {
     const newTasks = updateTaskInTree(tasks, taskId, (task) => ({
       ...task,
@@ -130,6 +138,7 @@ function App() {
     }
 
     findAndMove(newTasks, []);
+    setFocusTaskId(taskId)
     setTasks(newTasks);
   };
 
@@ -142,6 +151,7 @@ function App() {
             task={task}
             focusTaskId={focusTaskId}
             onFocusHandled={handleFocusHandled}
+            onTextChange={handleTextChange}
             onToggle={handleToggleComplete}
             onDelete={handleDeleteTask}
             onAddTask={handleAddTask}

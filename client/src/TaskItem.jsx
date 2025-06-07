@@ -1,18 +1,28 @@
 import React from 'react';
 import { useRef, useEffect } from 'react';
+import { getCursorPosition, setCursorPosition } from './utilities';
 
 // tutorial calls this a "prop" object
-export default function TaskItem({ task, onToggle, onDelete, onAddTask, onFocusHandled, focusTaskId, onIndentChange }) {
+export default function TaskItem({ task, onTextChange, onToggle, onDelete, onAddTask, onFocusHandled, focusTaskId, onIndentChange }) {
 
     const textInputRef = useRef(null);
+    const cursorPosition = useRef(null);
 
     useEffect(() => {
         if (textInputRef.current && task.id === focusTaskId) {
             textInputRef.current.focus();
 
+            setCursorPosition(textInputRef.current,textInputRef.current.textContent.length);
             onFocusHandled();
         }
     }, [focusTaskId, task.id, onFocusHandled]);
+
+    useEffect(() => {
+        if (textInputRef.current && cursorPosition.current !== null && document.activeElement === textInputRef.current) {
+            setCursorPosition(textInputRef.current, cursorPosition.current);
+            cursorPosition.current = null;
+        }
+    }, [task.text]);
 
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
@@ -29,13 +39,18 @@ export default function TaskItem({ task, onToggle, onDelete, onAddTask, onFocusH
         }
     };
 
+    const handleInput = (e) => {
+        cursorPosition.current = getCursorPosition(e.currentTarget);
+        onTextChange(task.id, e.currentTarget.textContent);
+    };
+
     return (
         <li>
             <div className="task-content">
                 <span className="task-checkbox" onClick={() => onToggle(task.id)}>
                     {task.completed ? '[x]' : '[ ]'}
                 </span>
-                <div className="task-text" contentEditable="true" onKeyDown={handleKeyDown} suppressContentEditableWarning={true} ref={textInputRef}>
+                <div className="task-text" contentEditable="true" onKeyDown={handleKeyDown} onInput={handleInput} suppressContentEditableWarning={true} ref={textInputRef}>
                     {task.text}
                 </div>
                 <span className="task-delete" onClick={() => onDelete(task.id)}>x</span>
@@ -48,6 +63,7 @@ export default function TaskItem({ task, onToggle, onDelete, onAddTask, onFocusH
                             task={childTask}
                             focusTaskId={focusTaskId}
                             onFocusHandled={onFocusHandled}
+                            onTextChange={onTextChange}
                             onToggle={onToggle}
                             onDelete={onDelete}
                             onAddTask={onAddTask}
