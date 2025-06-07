@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import './App.css'
+import { useState, useEffect } from 'react';
+import './App.css';
 import TaskItem from './TaskItem';
 
 // placeholder tasks for before i have a real backend
@@ -27,6 +27,8 @@ const placeholderTasks = [
 
 function App() {
   const [tasks, setTasks] = useState(placeholderTasks);
+
+  const [focusTaskId, setFocusTaskId] = useState(null);
 
   const updateTaskInTree = (nodes, taskId, updateFn) => {
     return nodes.map(node => {
@@ -84,8 +86,14 @@ function App() {
       return result;
     };
 
-    const newTasks = addTaskInTree(tasks);
+    const newTasks = addTaskInTree(JSON.parse(JSON.stringify(tasks)));
     setTasks(newTasks);
+
+    setFocusTaskId(newId)
+  };
+
+  const handleFocusHandled = () => {
+    setFocusTaskId(null);
   };
 
   return (
@@ -95,6 +103,8 @@ function App() {
           <TaskItem 
             key={task.id}
             task={task}
+            focusTaskId={focusTaskId}
+            onFocusHandled={handleFocusHandled}
             onToggle={handleToggleComplete}
             onDelete={handleDeleteTask}
             onAddTask={handleAddTask}
