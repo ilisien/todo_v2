@@ -3,7 +3,7 @@ import { useRef, useEffect } from 'react';
 import { getCursorPosition, setCursorPosition } from './utilities';
 
 // tutorial calls this a "prop" object
-export default function TaskItem({ task, onTextChange, onToggle, onDelete, onAddTask, onFocusHandled, focusTaskId, onIndentChange }) {
+export default function TaskItem({ task, onTextChange, onToggle, onDelete, onAddTask, onFocusHandled, focusTaskId, onIndentChange, onNavigateFocus, onMoveTask }) {
 
     const textInputRef = useRef(null);
     const cursorPosition = useRef(null);
@@ -25,15 +25,29 @@ export default function TaskItem({ task, onTextChange, onToggle, onDelete, onAdd
     }, [task.text]);
 
     const handleKeyDown = (e) => {
-        if (e.key === 'Enter') {
+        if (e.ctrlKey) {
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                onMoveTask(task.id,'up');
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                onMoveTask(task.id, 'down');
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            onNavigateFocus(task.id, 'up');
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            onNavigateFocus(task.id, 'down');
+        } else if (e.key === 'Enter') {
             e.preventDefault();
             onAddTask(task.id);
-        }
-        else if (e.key === 'Tab') {
-            e.preventDefault();
+        } else if (e.key === 'Tab') {
             if (e.shiftKey) {
+                e.preventDefault();
                 onIndentChange(task.id, 'unindent');
             } else {
+                e.preventDefault();
                 onIndentChange(task.id, 'indent');
             }
         }
@@ -68,6 +82,8 @@ export default function TaskItem({ task, onTextChange, onToggle, onDelete, onAdd
                             onDelete={onDelete}
                             onAddTask={onAddTask}
                             onIndentChange={onIndentChange}
+                            onNavigateFocus={onNavigateFocus}
+                            onMoveTask={onMoveTask}
                         />
                     ))}
                 </ul>

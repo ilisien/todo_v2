@@ -142,6 +142,70 @@ function App() {
     setTasks(newTasks);
   };
 
+  const getTaskOrder = () => {
+    const ids = [];
+    const traverse = (nodes) => {
+      for (const node of nodes) {
+        ids.push(node.id);
+        if (node.children && node.children.length > 0) {
+          traverse(node.children);
+        }
+      }
+    };
+    traverse(tasks);
+    return ids;
+  };
+
+  const handleFocusNavigation = (currentTaskId, direction) => {
+    const orderedIds = getTaskOrder();
+    const currentIndex = orderedIds.indexOf(currentTaskId);
+
+    let nextIndex;
+    if (direction === 'up') {
+      nextIndex = currentIndex - 1;
+    } else {
+      nextIndex = currentIndex + 1;
+    }
+
+    if (nextIndex >= 0 && nextIndex < orderedIds.length) {
+      const nextTaskId = orderedIds[nextIndex];
+      setFocusTaskId(nextTaskId);
+    }
+  };
+
+  const handleMoveTask = (taskId, direction) => {
+    const newTasks = JSON.parse(JSON.stringify(tasks));
+
+    let taskMoved = false;
+    const findAndMove = (nodes) => {
+      for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].id === taskId) {
+          if (direction === 'up' && i > 0) {
+            [nodes[i], nodes[i - 1]] = [nodes[i - 1], nodes[i]];
+            taskMoved = true;
+            return;
+          }
+          if (direction === 'down' && i < nodes.length - 1) {
+            [nodes[i], nodes[i + 1]] = [nodes[i + 1], nodes[i]];
+            taskMoved = true;
+            return;
+          }
+        }
+        if (nodes[i].children && nodes[i].children.length > 0) {
+          findAndMove(nodes[i].children);
+          if (taskMoved) return;
+        }
+      }
+    };
+
+    findAndMove(newTasks);
+
+    if (taskMoved) {
+      setTasks(newTasks);
+      setFocusTaskId(taskId);
+    }
+  };
+
   return (
     <div className="app-container">
       <ul className="task-list">
@@ -156,6 +220,8 @@ function App() {
             onDelete={handleDeleteTask}
             onAddTask={handleAddTask}
             onIndentChange={handleIndentChange}
+            onNavigateFocus={handleFocusNavigation}
+            onMoveTask={handleMoveTask}
           />
         ))}
       </ul>
