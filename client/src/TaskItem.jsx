@@ -40,8 +40,12 @@ export default function TaskItem({ task, onTextChange, onToggle, onDelete, onAdd
             e.preventDefault();
             onNavigateFocus(task.id, 'down');
         } else if (e.key === 'Enter') {
-            e.preventDefault();
-            onAddTask(task.id);
+            if (e.shiftKey) {
+                // (do nothing)
+            } else {
+                e.preventDefault();
+                onAddTask(task.id);
+            }
         } else if (e.key === 'Tab') {
             if (e.shiftKey) {
                 e.preventDefault();
@@ -49,6 +53,12 @@ export default function TaskItem({ task, onTextChange, onToggle, onDelete, onAdd
             } else {
                 e.preventDefault();
                 onIndentChange(task.id, 'indent');
+            }
+        } else if (e.key === 'Delete') {
+            if (e.shiftKey) {
+                e.preventDefault();
+                onNavigateFocus(task.id,'up')
+                onDelete(task.id)
             }
         }
     };
