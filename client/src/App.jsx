@@ -2,33 +2,55 @@ import { useState, useEffect } from 'react';
 import './App.css';
 import TaskItem from './TaskItem';
 
-// placeholder tasks for before i have a real backend
-const placeholderTasks = [
-  {
-    id:1,
-    text: "Finish the todo app!",
-    completed: false,
-    children: [
-      {
-        id:2, text: "subtask1", completed:true, children: []
-      },
-      {
-        id:3, text: "subtask2", completed:false, children: []
-      },
-    ]
-  },
-  {
-    id: 4,
-    text: "some other task",
-    completed: false,
-    children: [],
-  },
-];
-
 function App() {
-  const [tasks, setTasks] = useState(placeholderTasks);
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/blob')
+      .then(res => res.json())
+      .then(data => {
+        // Check if the data from the server is empty or null
+        if (data && Array.isArray(data) && data.length > 0) {
+          // If we have data, just set it as normal.
+          setTasks(data);
+        } else {
+          // THIS IS THE NEW LOGIC FOR THE EMPTY STATE
+          // 1. Create a new, default task object.
+          const firstTaskId = Date.now(); // Use a timestamp for a unique ID
+          const firstTask = {
+            id: firstTaskId,
+            text: "", // Start with empty text so the user can type
+            completed: false,
+            children: [],
+          };
+          
+          // 2. Set the application state to contain only this new task.
+          setTasks([firstTask]);
+          
+          // 3. Command the UI to focus this new task immediately.
+          setFocusTaskId(firstTaskId);
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching blob:", error);
+        // It's also good practice to handle fetch errors by creating a default task
+        // so the app is still usable even if the backend is down on first load.
+        const firstTaskId = Date.now();
+        const firstTask = { id: firstTaskId, text: "", completed: false, children: [] };
+        setTasks([firstTask]);
+        setFocusTaskId(firstTaskId);
+      });
+  }, []); // The empty dependency array `[]` is correct; this should only run once on mount.
 
   const [focusTaskId, setFocusTaskId] = useState(null);
+
+  const syncStateWithBackend = (newState) => {
+    fetch('http://localhost:5000/api/blob', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newState)
+    });
+  };
 
   const updateTaskInTree = (nodes, taskId, updateFn) => {
     return nodes.map(node => {
@@ -48,7 +70,8 @@ function App() {
       ...task,
       text: newText,
     }));
-    setTasks(newTasks)
+    setTasks(newTasks);
+    syncStateWithBackend(newTasks);
   }
 
   const handleToggleComplete = (taskId) => {
@@ -57,6 +80,7 @@ function App() {
       completed: !task.completed,
     }));
     setTasks(newTasks);
+    syncStateWithBackend(newTasks);
   };
 
   const deleteTaskFromTree = (nodes,taskId) => {
@@ -73,6 +97,7 @@ function App() {
   const handleDeleteTask = (taskId) => {
     const newTasks = deleteTaskFromTree(tasks, taskId);
     setTasks(newTasks);
+    syncStateWithBackend(newTasks)
   };
 
   const handleAddTask = (currentTaskId) => {
@@ -96,8 +121,8 @@ function App() {
 
     const newTasks = addTaskInTree(JSON.parse(JSON.stringify(tasks)));
     setTasks(newTasks);
-
     setFocusTaskId(newId)
+    syncStateWithBackend(newTasks)
   };
 
   const handleFocusHandled = () => {
@@ -140,6 +165,7 @@ function App() {
     findAndMove(newTasks, []);
     setFocusTaskId(taskId)
     setTasks(newTasks);
+    syncStateWithBackend(newTasks)
   };
 
   const getTaskOrder = () => {
@@ -203,6 +229,7 @@ function App() {
     if (taskMoved) {
       setTasks(newTasks);
       setFocusTaskId(taskId);
+      syncStateWithBackend(newTasks)
     }
   };
 
