@@ -1,31 +1,85 @@
 
 import os
+import json
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from datetime import datetime
+from flask_bcrypt import Bcrypt
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, JWTManager
+from datetime import datetime, timedelta
+
 
 app = Flask(__name__)
 CORS(app)
+bcrypt = Bcrypt(app)
+
+app.config['SECRET_KEY'] = 'secret_key'
+app.config['JWT_SECRET_KEY'] = app.config['SECRET_KEY']
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'blob.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+jwt = JWTManager(app)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    username = db.Column(db.String(80),unique = True,nullable=False)
+    password_hash = db.Column(db.String(128),nullable=False)
+    
+    def set_password(self, password):
+        self.password_hash = bcrypt.generate_password_hash(password).decode('utf8')
+
+    def check_password(self, password):
+        return bcrypt.check_password_hash(self.password_hash,password)
 
 class Blob(db.Model):
     id = db.Column(db.Integer, primary_key=True, default=1)
     content = db.Column(db.Text, nullable=False, default='[]')
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-# --- API Endpoints ---
+@app.route('/api/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    if not username or not password:
+        return jsonify({'message': 'Username and password are required'}), 400
+    if User.query.filter_by(username=username).first():
+        return jsonify({'message': 'Username already exists'}), 409
+    new_user = User(username=username)
+    new_user.set_password(password)
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({'message': 'New user created!'}), 201
+
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    user = User.query.filter_by(username=data.get('username')).first()
+
+    if not user or not user.check_password(data.get('password')):
+        return jsonify({'message': 'Invalid credentials'}), 401
+
+    # Create the token using the library.
+    # The 'identity' can be any JSON-serializable data. The user's ID is perfect.
+    access_token = create_access_token(identity=str(user.id))
+    
+    return jsonify({'token': access_token})
 
 @app.route('/api/blob', methods=['GET', 'POST'])
+@jwt_required()
 def handle_blob():
-    doc = Blob.query.get(1)
+    print("handlingblob")
+    current_user_id = int(get_jwt_identity())
+    
+    # Find the document belonging to the currently logged-in user
+    doc = Blob.query.filter_by(user_id=current_user_id).first()
+
     if not doc:
-        doc = Blob(id=1, content='[]')
+        doc = Blob(user_id=current_user_id, content='[]')
         db.session.add(doc)
         db.session.commit()
 
@@ -34,15 +88,9 @@ def handle_blob():
 
     if request.method == 'POST':
         new_content_json = request.get_json()
-        
-        if new_content_json is None:
-            return jsonify({'error': 'Invalid JSON in request body'}), 400
-
-        import json
         doc.content = json.dumps(new_content_json)
-        
         db.session.commit()
-        return jsonify({'success': True, 'message': 'Blob saved.'})
+        return jsonify({'success': True})
 
 # --- Main Execution ---
 if __name__ == '__main__':
