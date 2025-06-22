@@ -48,33 +48,33 @@ export default function RegisterPage() {
 
   return (
     <div className="auth-form-container">
-      <h2>Register</h2>
+      <h2>register</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="username">Username</label>
+          <label htmlFor="username">username:</label>
           <input
             id="username"
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="Choose a username"
+            placeholder="firstlast?"
             required
             autoComplete="username"
           />
         </div>
         <div className="form-group">
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">password:</label>
           <input
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Create a password (min. 8 characters)"
+            placeholder="password (min. 8 chars)"
             required
             autoComplete="new-password"
           />
         </div>
-        <button type="submit">Register</button>
+        <button type="submit">register</button>
       </form>
       
       {/* Display success or error messages */}
@@ -82,7 +82,7 @@ export default function RegisterPage() {
       {error && <p className="error-message">{error}</p>}
 
       <p className="redirect-link">
-        Already have an account? <a href="/login">Login here</a>
+        already have an account? <a href="/login">login here</a>
       </p>
     </div>
   );

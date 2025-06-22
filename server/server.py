@@ -1,4 +1,3 @@
-
 import os
 import json
 from flask import Flask, request, jsonify
@@ -63,8 +62,6 @@ def login():
     if not user or not user.check_password(data.get('password')):
         return jsonify({'message': 'Invalid credentials'}), 401
 
-    # Create the token using the library.
-    # The 'identity' can be any JSON-serializable data. The user's ID is perfect.
     access_token = create_access_token(identity=str(user.id))
     
     return jsonify({'token': access_token})
@@ -75,7 +72,6 @@ def handle_blob():
     print("handlingblob")
     current_user_id = int(get_jwt_identity())
     
-    # Find the document belonging to the currently logged-in user
     doc = Blob.query.filter_by(user_id=current_user_id).first()
 
     if not doc:

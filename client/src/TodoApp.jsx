@@ -39,7 +39,7 @@ function TodoApp({ token }) {
         setTasks([firstTask]);
         setFocusTaskId(firstTaskId);
       });
-  }, [token]); // The empty dependency array `[]` is correct; this should only run once on mount.
+  }, [token]);
 
   const [focusTaskId, setFocusTaskId] = useState(null);
 
@@ -234,25 +234,23 @@ function TodoApp({ token }) {
   };
 
   return (
-    <div className="app-container">
-      <ul className="task-list">
-        {tasks.map(task => (
-          <TaskItem 
-            key={task.id}
-            task={task}
-            focusTaskId={focusTaskId}
-            onFocusHandled={handleFocusHandled}
-            onTextChange={handleTextChange}
-            onToggle={handleToggleComplete}
-            onDelete={handleDeleteTask}
-            onAddTask={handleAddTask}
-            onIndentChange={handleIndentChange}
-            onNavigateFocus={handleFocusNavigation}
-            onMoveTask={handleMoveTask}
-          />
-        ))}
-      </ul>
-    </div>
+    <ul className="task-list">
+    {tasks.map(task => (
+        <TaskItem 
+        key={task.id}
+        task={task}
+        focusTaskId={focusTaskId}
+        onFocusHandled={handleFocusHandled}
+        onTextChange={handleTextChange}
+        onToggle={handleToggleComplete}
+        onDelete={handleDeleteTask}
+        onAddTask={handleAddTask}
+        onIndentChange={handleIndentChange}
+        onNavigateFocus={handleFocusNavigation}
+        onMoveTask={handleMoveTask}
+        />
+    ))}
+    </ul>
   );
 }
 

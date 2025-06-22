@@ -9,7 +9,7 @@ function App() {
 
   return (
     <div className="app-container">
-      {token && <button onClick={logout}>Logout</button>}
+      {token && <button onClick={logout}>log out</button>}
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />

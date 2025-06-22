@@ -31,14 +31,14 @@ export default function LoginPage() {
 
   return (
     <div>
-      <h2>Login</h2>
+      <h2>login</h2>
       <form onSubmit={handleSubmit}>
-        <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" required />
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
-        <button type="submit">Login</button>
+        <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username" required />
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="password" required />
+        <button type="submit">login</button>
       </form>
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      <p>Don't have an account? <a href="/register">Register</a></p>
+      <p>don't have an account? <a href="/register">register</a></p>
     </div>
   );
 }
