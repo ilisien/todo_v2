@@ -2,17 +2,18 @@ import { useState, useEffect, useRef } from 'react';
 import './App.css';
 import TaskItem from './TaskItem.jsx';
 import debounce from 'lodash/debounce';
+import axios from './axiosInstance.js';
 
 function TodoApp({ token }) {
   const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/blob', {
+    axios.get('http://localhost:5000/api/blob', {
         headers: { 'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`},
     })
-      .then(res => res.json())
-      .then(data => {
+      .then(res => {
+        const data = res.data;
         // Check if the data from the server is empty or null
         if (data && Array.isArray(data) && data.length > 0) {
           // If we have data, just set it as normal.
@@ -45,8 +46,7 @@ function TodoApp({ token }) {
   const [focusTaskId, setFocusTaskId] = useState(null);
 
   const syncStateWithBackend = (newState) => {
-    fetch('http://localhost:5000/api/blob', {
-      method: 'POST',
+    axios.post('http://localhost:5000/api/blob', {
       headers: { 'Content-Type': 'application/json',
                  'Authorization': `Bearer ${token}`},
       body: JSON.stringify(newState)
@@ -56,8 +56,7 @@ function TodoApp({ token }) {
   const debouncedSyncStateWithBackend = debounce(syncStateWithBackend,400);
 
   const patchTaskToBackend = async (taskId, partialUpdate, token) => {
-    await fetch('http://localhost:5000/api/blob', {
-        method: 'PATCH',
+    await axios.patch('http://localhost:5000/api/blob', {
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`

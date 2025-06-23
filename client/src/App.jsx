@@ -1,11 +1,18 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext.jsx';
 import TodoApp from './TodoApp.jsx';
 import LoginPage from './LoginPage.jsx';
 import RegisterPage from './RegisterPage.jsx';
+import { setLogout } from './axiosInstance.js';
+import { useEffect } from 'react';
 
 function App() {
   const { token, logout } = useAuth();
+
+  useEffect(() => {
+    setLogout(logout);
+
+  }, [logout]);
 
   return (
     <div className="app-container">
