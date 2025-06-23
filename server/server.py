@@ -6,7 +6,7 @@ from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, JWTManager
 from datetime import datetime, timedelta
-
+from utilities import patch_task_by_id
 
 app = Flask(__name__)
 CORS(app)
@@ -66,7 +66,7 @@ def login():
     
     return jsonify({'token': access_token})
 
-@app.route('/api/blob', methods=['GET', 'POST'])
+@app.route('/api/blob', methods=['GET', 'POST', 'PATCH'])
 @jwt_required()
 def handle_blob():
     print("handlingblob")
@@ -85,6 +85,19 @@ def handle_blob():
     if request.method == 'POST':
         new_content_json = request.get_json()
         doc.content = json.dumps(new_content_json)
+        db.session.commit()
+        return jsonify({'success': True})
+
+    if request.method == 'PATCH':
+        patch_data = request.get_json()
+        blob = json.loads(doc.content)
+
+        task_id = patch_data.get('id')
+        updated = False
+        if not patch_task_by_id(blob,task_id,patch_data):
+            return jsonify({'error':'Task not found'}), 404
+        
+        doc.content = json.dumps(blob)
         db.session.commit()
         return jsonify({'success': True})
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 import TaskItem from './TaskItem.jsx';
+import debounce from 'lodash/debounce';
 
 function TodoApp({ token }) {
   const [tasks, setTasks] = useState([]);
@@ -52,6 +53,21 @@ function TodoApp({ token }) {
     });
   };
 
+  const debouncedSyncStateWithBackend = debounce(syncStateWithBackend,400);
+
+  const patchTaskToBackend = async (taskId, partialUpdate, token) => {
+    await fetch('http://localhost:5000/api/blob', {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ id: taskId, ...partialUpdate })
+    });
+  };
+
+  const debouncedPatchTaskToBackend = debounce(patchTaskToBackend,400);
+
   const updateTaskInTree = (nodes, taskId, updateFn) => {
     return nodes.map(node => {
       if (node.id === taskId) {
@@ -65,13 +81,38 @@ function TodoApp({ token }) {
     });
   };
 
+  const updateTaskInTreeWithResult = (nodes, taskId, updateFn) => {
+    let updatedTask = null;
+
+    const updatedNodes = nodes.map(node => {
+        if (node.id === taskId) {
+            const updatedNode = updateFn(node);
+            updatedTask = updatedNode;
+            return updatedNode;
+        }
+
+        if (node.children && node.children.length > 0) {
+            const { updatedTree: newChildren, updateTask: foundTask } = updateTaskInTreeWithResult(node.children,taskId,updateFn);
+
+            if (foundTask) {
+                updatedTask = foundTask;
+                return { ...node, children: newChildren };
+            }
+        }
+
+        return node;
+    });
+
+    return { updatedTree: updatedNodes, updatedTask };
+  };
+
   const handleTextChange = (taskId, newText) => {
     const newTasks = updateTaskInTree(tasks, taskId, (task) => ({
       ...task,
       text: newText,
     }));
     setTasks(newTasks);
-    syncStateWithBackend(newTasks);
+    debouncedPatchTaskToBackend(taskId, { text: newText }, token);
   }
 
   const handleToggleComplete = (taskId) => {
@@ -79,8 +120,8 @@ function TodoApp({ token }) {
       ...task,
       completed: !task.completed,
     }));
-    setTasks(newTasks);
-    syncStateWithBackend(newTasks);
+    setTasks(updatedTree);
+    patchTaskToBackend(updatedTask.id, { completed: updatedTask.completed }, token);
   };
 
   const deleteTaskFromTree = (nodes,taskId) => {
