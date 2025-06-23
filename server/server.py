@@ -14,6 +14,7 @@ bcrypt = Bcrypt(app)
 
 app.config['SECRET_KEY'] = 'secret_key'
 app.config['JWT_SECRET_KEY'] = app.config['SECRET_KEY']
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=3)
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'blob.db')

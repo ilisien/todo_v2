@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './App.css';
 import TaskItem from './TaskItem.jsx';
 import debounce from 'lodash/debounce';
@@ -66,8 +66,6 @@ function TodoApp({ token }) {
     });
   };
 
-  const debouncedPatchTaskToBackend = debounce(patchTaskToBackend,400);
-
   const updateTaskInTree = (nodes, taskId, updateFn) => {
     return nodes.map(node => {
       if (node.id === taskId) {
@@ -81,47 +79,54 @@ function TodoApp({ token }) {
     });
   };
 
-  const updateTaskInTreeWithResult = (nodes, taskId, updateFn) => {
-    let updatedTask = null;
+  const updateTaskInTreeAndReturn = (nodes, taskId, updateFn) => {
+    let changedNode = null; // This will store the updated node if found
 
-    const updatedNodes = nodes.map(node => {
+    const updatedTree = nodes.map(node => {
+        // If this is the node we're looking for
         if (node.id === taskId) {
-            const updatedNode = updateFn(node);
-            updatedTask = updatedNode;
-            return updatedNode;
+        const updated = updateFn(node);
+        changedNode = updated; // Capture the updated node
+        return updated;
         }
 
+        // If this node has children, recurse into them
         if (node.children && node.children.length > 0) {
-            const { updatedTree: newChildren, updateTask: foundTask } = updateTaskInTreeWithResult(node.children,taskId,updateFn);
+        const { updatedTree: updatedChildren, changedNode: childChangedNode } =
+            updateTaskInTreeAndReturn(node.children, taskId, updateFn);
 
-            if (foundTask) {
-                updatedTask = foundTask;
-                return { ...node, children: newChildren };
-            }
+        // If the changed node was found in the children, propagate it up
+        if (childChangedNode) {
+            changedNode = childChangedNode;
+        }
+        // Return a new node object with updated children
+        return { ...node, children: updatedChildren };
         }
 
+        // If no match and no children to recurse, return the node as is
         return node;
     });
 
-    return { updatedTree: updatedNodes, updatedTask };
+    // Return both the new tree and the changed node
+    return { updatedTree, changedNode };
   };
 
   const handleTextChange = (taskId, newText) => {
-    const newTasks = updateTaskInTree(tasks, taskId, (task) => ({
+    const {updatedTree: newTasks, changedNode: task} = updateTaskInTreeAndReturn(tasks, taskId, (task) => ({
       ...task,
       text: newText,
     }));
     setTasks(newTasks);
-    debouncedPatchTaskToBackend(taskId, { text: newText }, token);
+    patchTaskToBackend(taskId, { text: newText }, token);
   }
 
   const handleToggleComplete = (taskId) => {
-    const newTasks = updateTaskInTree(tasks, taskId, (task) => ({
+    const {updatedTree: newTasks, changedNode: task} = updateTaskInTreeAndReturn(tasks, taskId, (task) => ({
       ...task,
       completed: !task.completed,
     }));
-    setTasks(updatedTree);
-    patchTaskToBackend(updatedTask.id, { completed: updatedTask.completed }, token);
+    setTasks(newTasks);
+    patchTaskToBackend(taskId, { completed: task.completed }, token);
   };
 
   const deleteTaskFromTree = (nodes,taskId) => {
