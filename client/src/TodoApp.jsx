@@ -7,6 +7,13 @@ import axios from './axiosInstance.js';
 function TodoApp({ token }) {
   const [tasks, setTasks] = useState([]);
 
+  const createBlankTask = () => ({
+      id: Date.now(),
+      text: "",
+      completed: false,
+      children: [],
+  });
+
   useEffect(() => {
     axios.get('http://localhost:5000/api/blob', {
         headers: { 'Content-Type': 'application/json',
@@ -19,49 +26,38 @@ function TodoApp({ token }) {
           // If we have data, just set it as normal.
           setTasks(data);
         } else {
-          const firstTaskId = Date.now();
-          const firstTask = {
-            id: firstTaskId,
-            text: "",
-            completed: false,
-            children: [],
-          };
-          
-          setTasks([firstTask]);
-          
-          setFocusTaskId(firstTaskId);
+          const blankTask = createBlankTask();
+          setTasks([blankTask]);
+          setFocusTaskId(blankTask.id);
         }
       })
       .catch(error => {
         console.error("Error fetching blob:", error);
         // It's also good practice to handle fetch errors by creating a default task
         // so the app is still usable even if the backend is down on first load.
-        const firstTaskId = Date.now();
-        const firstTask = { id: firstTaskId, text: "", completed: false, children: [] };
-        setTasks([firstTask]);
-        setFocusTaskId(firstTaskId);
+        const blankTask = createBlankTask();
+        setTasks([blankTask]);
+        setFocusTaskId(blankTask.id);
       });
   }, [token]);
 
   const [focusTaskId, setFocusTaskId] = useState(null);
 
   const syncStateWithBackend = (newState) => {
-    axios.post('http://localhost:5000/api/blob', {
+    axios.post('http://localhost:5000/api/blob', newState, {
       headers: { 'Content-Type': 'application/json',
-                 'Authorization': `Bearer ${token}`},
-      body: JSON.stringify(newState)
+                 'Authorization': `Bearer ${token}`}
     });
   };
 
   const debouncedSyncStateWithBackend = debounce(syncStateWithBackend,400);
 
   const patchTaskToBackend = async (taskId, partialUpdate, token) => {
-    await axios.patch('http://localhost:5000/api/blob', {
+    await axios.patch('http://localhost:5000/api/blob', { id: taskId, ...partialUpdate }, {
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ id: taskId, ...partialUpdate })
+        }
     });
   };
 
@@ -141,8 +137,14 @@ function TodoApp({ token }) {
 
   const handleDeleteTask = (taskId) => {
     const newTasks = deleteTaskFromTree(tasks, taskId);
-    setTasks(newTasks);
-    syncStateWithBackend(newTasks)
+    if (newTasks.length == 0) {
+      const blankTask = createBlankTask();
+      setTasks([blankTask]);
+      setFocusTaskId(blankTask.id);
+    } else {
+      setTasks(newTasks);
+      syncStateWithBackend(newTasks);
+    };
   };
 
   const handleAddTask = (currentTaskId) => {
@@ -234,8 +236,20 @@ function TodoApp({ token }) {
     let nextIndex;
     if (direction === 'up') {
       nextIndex = currentIndex - 1;
-    } else {
+    } else if (direction === 'down') {
       nextIndex = currentIndex + 1;
+    } else if (direction === 'prefer up') {
+      if (currentIndex == 0) {
+        nextIndex = currentIndex + 1;
+      } else {
+        nextIndex = currentIndex - 1;
+      }
+    } else if (direction === 'prefer down') {
+      if (currentIndex == (orderedIds.length - 1)) {
+        nextIndex = currentIndex - 1;
+      } else {
+        nextIndex = currentIndex + 1;
+      }
     }
 
     if (nextIndex >= 0 && nextIndex < orderedIds.length) {

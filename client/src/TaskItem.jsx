@@ -57,7 +57,7 @@ export default function TaskItem({ task, onTextChange, onToggle, onDelete, onAdd
         } else if (e.key === 'Delete') {
             if (e.shiftKey) {
                 e.preventDefault();
-                onNavigateFocus(task.id,'up')
+                onNavigateFocus(task.id,'prefer up')
                 onDelete(task.id)
             }
         }
