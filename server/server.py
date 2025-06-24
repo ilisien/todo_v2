@@ -17,7 +17,7 @@ app.config['JWT_SECRET_KEY'] = app.config['SECRET_KEY']
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=12)
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'blob.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'backend.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -34,10 +34,18 @@ class User(db.Model):
     def check_password(self, password):
         return bcrypt.check_password_hash(self.password_hash,password)
 
+
 class Blob(db.Model):
+    __abstract__ = True
     id = db.Column(db.Integer, primary_key=True, default=1)
     content = db.Column(db.Text, nullable=False, default='[]')
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+class TaskBlob(Blob):
+    __tablename__ = 'task_blob'
+
+class PreferencesBlob(Blob):
+    __tablename__ = 'preferences_blob'
 
 @app.route('/api/register', methods=['POST'])
 def register():
@@ -67,16 +75,15 @@ def login():
     
     return jsonify({'token': access_token})
 
-@app.route('/api/blob', methods=['GET', 'POST', 'PATCH'])
+@app.route('/api/tasks', methods=['GET', 'POST', 'PATCH'])
 @jwt_required()
-def handle_blob():
-    print("handlingblob")
+def handle_tasks_blob():
     current_user_id = int(get_jwt_identity())
     
-    doc = Blob.query.filter_by(user_id=current_user_id).first()
+    doc = TaskBlob.query.filter_by(user_id=current_user_id).first()
 
     if not doc:
-        doc = Blob(user_id=current_user_id, content='[]')
+        doc = TaskBlob(user_id=current_user_id, content='[]')
         db.session.add(doc)
         db.session.commit()
 
@@ -99,6 +106,27 @@ def handle_blob():
             return jsonify({'error':'Task not found'}), 404
         
         doc.content = json.dumps(blob)
+        db.session.commit()
+        return jsonify({'success': True})
+    
+@app.route('/api/preferences', methods=['GET', 'POST'])
+@jwt_required()
+def handle_preferences_blob():
+    current_user_id = int(get_jwt_identity())
+
+    doc = PreferencesBlob.query.filter_by(user_id=current_user_id).first()
+
+    if not doc:
+        doc = PreferencesBlob(user_id=current_user_id, content='[]')
+        db.session.add(doc)
+        db.session.commit()
+
+    if request.method == 'GET':
+        return doc.content, 200, {'Content-Type': 'application/json'}
+
+    if request.method == 'POST':
+        new_content_json = request.get_json()
+        doc.content = json.dumps(new_content_json)
         db.session.commit()
         return jsonify({'success': True})
 

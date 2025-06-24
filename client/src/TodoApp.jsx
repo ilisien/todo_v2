@@ -15,7 +15,7 @@ function TodoApp({ token }) {
   });
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/blob', {
+    axios.get('http://localhost:5000/api/tasks', {
         headers: { 'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`},
     })
@@ -44,7 +44,7 @@ function TodoApp({ token }) {
   const [focusTaskId, setFocusTaskId] = useState(null);
 
   const syncStateWithBackend = (newState) => {
-    axios.post('http://localhost:5000/api/blob', newState, {
+    axios.post('http://localhost:5000/api/tasks', newState, {
       headers: { 'Content-Type': 'application/json',
                  'Authorization': `Bearer ${token}`}
     });
@@ -53,7 +53,7 @@ function TodoApp({ token }) {
   const debouncedSyncStateWithBackend = debounce(syncStateWithBackend,400);
 
   const patchTaskToBackend = async (taskId, partialUpdate, token) => {
-    await axios.patch('http://localhost:5000/api/blob', { id: taskId, ...partialUpdate }, {
+    await axios.patch('http://localhost:5000/api/tasks', { id: taskId, ...partialUpdate }, {
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
