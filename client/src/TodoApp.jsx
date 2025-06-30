@@ -33,8 +33,7 @@ function TodoApp({ token }) {
       })
       .catch(error => {
         console.error("Error fetching blob:", error);
-        // It's also good practice to handle fetch errors by creating a default task
-        // so the app is still usable even if the backend is down on first load.
+
         const blankTask = createBlankTask();
         setTasks([blankTask]);
         setFocusTaskId(blankTask.id);

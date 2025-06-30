@@ -7,4 +7,25 @@ const PrefsModal = ({ isOpen, onClose }) => {
     const [wrnColor, setWrnColor] = useState('#000000');
     const [errColor, setErrColor] = useState('#000000');
     const [scsColor, setScsColor] = useState('#000000');
+
+    useEffect(() => {
+        if (isOpen) {
+            fetch('/api/preferences', {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    setBkgColor(data.bkg_color )
+                    setTxtColor
+                    setLnkColor
+                    setWrnColor
+                    setErrColor
+                    setScsColor
+                });
+        }
+    }, [isOpen]);
+
+    const handleSubmit
 }
