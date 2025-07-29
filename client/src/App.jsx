@@ -5,6 +5,7 @@ import LoginPage from './LoginPage.jsx';
 import RegisterPage from './RegisterPage.jsx';
 import { setLogout } from './axiosInstance.js';
 import { useEffect } from 'react';
+import PrefsButton from './PrefsButton.jsx';
 
 function App() {
   const { token, logout } = useAuth();
@@ -17,6 +18,7 @@ function App() {
   return (
     <div className="app-container">
       {token && <button onClick={logout}>log out</button>}
+      {token && <PrefsButton token={token} />}
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
