@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 const PrefsModal = ({ isOpen, onToggle, token }) => {
   const [bkgColor, setBkgColor] = useState('#242424');
+  const [butColor, setButColor] = useState('#000000');
   const [txtColor, setTxtColor] = useState('#ffffff');
   const [lnkColor, setLnkColor] = useState('#646cff');
   const [wrnColor, setWrnColor] = useState('#000000');
@@ -12,6 +13,7 @@ const PrefsModal = ({ isOpen, onToggle, token }) => {
   const savePreferences = useCallback(() => {
     const preferences = {
       bkg_color: bkgColor,
+      but_color: butColor,
       txt_color: txtColor,
       lnk_color: lnkColor,
       wrn_color: wrnColor,
@@ -25,7 +27,7 @@ const PrefsModal = ({ isOpen, onToggle, token }) => {
                 'Authorization': `Bearer ${token}`},
       body: JSON.stringify(preferences),
     });
-  }, [bkgColor, txtColor, lnkColor, wrnColor, errColor, scsColor]);
+  }, [bkgColor, butColor, txtColor, lnkColor, wrnColor, errColor, scsColor]);
 
   // Load preferences when modal opens
   useEffect(() => {
@@ -37,6 +39,7 @@ const PrefsModal = ({ isOpen, onToggle, token }) => {
         .then(res => res.json())
         .then(data => {
           setBkgColor(data.bkg_color || '#242424');
+          setButColor(data.but_color || '#000000');
           setTxtColor(data.txt_color || '#ffffff');
           setLnkColor(data.lnk_color || '#646cff');
           setWrnColor(data.wrn_color || '#000000');
@@ -45,6 +48,7 @@ const PrefsModal = ({ isOpen, onToggle, token }) => {
 
           const root = document.documentElement;
           root.style.setProperty('--bkg-color', data.bkg_color || '#242424');
+          root.style.setProperty('--but-color', data.but_color || '#000000');
           root.style.setProperty('--txt-color', data.txt_color || '#ffffff');
           root.style.setProperty('--lnk-color', data.lnk_color || '#646cff');
           root.style.setProperty('--wrn-color', data.wrn_color || '#000000');
@@ -65,7 +69,7 @@ const PrefsModal = ({ isOpen, onToggle, token }) => {
 
   return (
     <div className="overlay" onClick={onToggle}>
-      <div className="modal">
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
         <h2>preferences</h2>
         <form>
           <label>
@@ -74,6 +78,15 @@ const PrefsModal = ({ isOpen, onToggle, token }) => {
               type="color"
               value={bkgColor}
               onChange={handleColorChange(setBkgColor, '--bkg-color')}
+              onBlur={savePreferences}
+            />
+          </label>
+          <label>
+            button color:
+            <input
+              type="color"
+              value={butColor}
+              onChange={handleColorChange(setButColor, '--but-color')}
               onBlur={savePreferences}
             />
           </label>

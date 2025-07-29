@@ -1,11 +1,18 @@
 :root {
+  --bkg-color: #242424;
+  --but-color: #000000;
+  --txt-color: #ffffff;
+  --lnk-color: #646cff;
+  --wrn-color: #000000;
+  --err-color: #000000;
+  --scs-color: #0dff00;
+
   font-family: monospace;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: var(--txt-color);
+  background-color: var(--bkg-color);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -15,7 +22,7 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--lnk-color);
   text-decoration: inherit;
 }
 
@@ -44,30 +51,18 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--but-color);
+  color: var(--txt-color);
   cursor: pointer;
   transition: border-color 0.25s;
   width:max-content;
 }
 button:hover {
-  border-color: #646cff;
+  border-color: var(--lnk-color);
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+  border-color: var(--scs-color);
 }
 
 form {
@@ -89,13 +84,13 @@ input {
   position: fixed;
   top: 0; left: 0;
   width: 100vw; height: 100vh;
-  background-color: rgba(0,0,0,0.5);
+  background-color: transparent;
   display: flex; justify-content: center; align-items: center;
   z-index: 999;
 }
 
 .modal {
-  background-color: rgba(0,0,0,0.5);
+  background-color: color-mix(in srgb, var(--but-color) 50%, transparent);
   padding: 2rem;
   border-radius: 10px;
   min-width: 300px;
